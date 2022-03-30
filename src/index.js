@@ -1,12 +1,28 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import App from './App';
+// import App from './App';
 import reportWebVitals from './reportWebVitals';
+// import MyRouter from "./router"
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route
+} from "react-router-dom"
+import MainPage from "./pages/MainPage"
+// import LoginForm from "./components/LoginForm"
+import SignUpForm from './components/SignUpForm';
+import Welcome from "./pages/Welcome"
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <Router>
+        <Routes>
+            <Route path="/" element={<Welcome/>}/>
+            <Route path="/signup" element={<SignUpForm/>}/>
+            <Route path="/messaging" element={<MainPage/>}/>
+        </Routes>
+    </Router>
   </React.StrictMode>,
   document.getElementById('root')
 );
