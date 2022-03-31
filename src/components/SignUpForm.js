@@ -1,21 +1,4 @@
-import {useNavigate} from "react-router-dom"
 function SignUpForm(props) {
-    let navigate = useNavigate()
-
-    let handleSubmit = (e) => {
-        e.preventDefault()
-        let username = e.target.Username.value
-        let password = e.target.Password.value
-        let confirmPassword = e.target.ConfirmPassword.value
-
-        if (password !== confirmPassword){
-            alert("password doesn't match")
-            return
-        }
-
-        console.log(password, confirmPassword, username);
-        navigate("/messaging")
-    }
 
     let width100 = {
         width: "100%",
@@ -25,7 +8,7 @@ function SignUpForm(props) {
 
     return (
         <div style={props.form}>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={props.handleSignUp}>
                 <label htmlFor="Username">Username</label><br></br>
                 <input style={width100} id="Username" placeholder="Username"></input><br></br>
                 <label htmlFor="Password">Password</label><br></br>

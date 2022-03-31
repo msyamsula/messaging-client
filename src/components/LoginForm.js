@@ -5,9 +5,15 @@ function LoginForm(props) {
     let handleSubmit = (e)=>{
         e.preventDefault()
         let form = e.target
-        let username = form.Username
-        let password = form.password
+        let username = form.Username.value
+        let password = form.Password.value
         console.log(username, password);
+        if (username === "" || password === ""){
+            alert("username & password must be filled")
+            return
+        }
+
+        localStorage.setItem("isLogin", true)
         navigate("/messaging")
     }
 

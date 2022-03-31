@@ -1,4 +1,6 @@
 import React from "react"
+import { Navigate } from "react-router-dom";
+import { withRouter } from "../withRouter"
 const { default: ChatBox } = require("../components/ChatBox");
 const { default: MessageBox } = require("../components/MessageBox");
 const { default: SearchBar } = require("../components/SearchBar");
@@ -34,9 +36,14 @@ class MainPage extends React.Component {
         this.searchBoxID = "searchBox"
 
         this.userList = {
-            gridArea: "2/1/span 9/2",
+            gridArea: "2/1/span 8/2",
             overflow: "scroll",
             padding: "0 15px"
+        }
+
+        this.logoutButton = {
+            gridArea: "10/1/11/2",
+            margin: "10px"
         }
 
         this.chatBox = {
@@ -53,7 +60,7 @@ class MainPage extends React.Component {
         // this.dummyMessage = this.createMessage(10)
         // this.allMessages = [...this.allMessages, ...this.dummyMessage]
         // this.allMessages = []
-        
+
         // this.users = this.createUser(5)
         this.initUsers = []
         this.state = {
@@ -67,36 +74,42 @@ class MainPage extends React.Component {
 
     scrollBot = () => {
         let element = document.getElementById(this.messageBoxID)
-        if (element!== ""){
+        if (element !== "") {
             element.scrollTop = element.scrollHeight
         }
     }
 
+    handleLogout = (e) => {
+        e.preventDefault()
+        localStorage.clear()
+        window.location.reload()
+    }
+
     filterUser = async () => {
-        if (this.state.searchText !== ""){
+        if (this.state.searchText !== "") {
             let filteredUser = this.initUsers.filter((user) => {
                 return user.name.includes(this.state.searchText)
             })
-            await this.setState({users: filteredUser})
+            await this.setState({ users: filteredUser })
         } else {
-            await this.setState({users: this.initUsers})
+            await this.setState({ users: this.initUsers })
         }
     }
 
     componentDidMount = async () => {
-        if (this.state.users.length === 0){
+        if (this.state.users.length === 0) {
             this.initUsers = [
-                {name: "syamsul"},
-                {name: "arifin"},
-                {name: "muhammad"},
-                {name: "fajar"}
+                { name: "syamsul" },
+                { name: "arifin" },
+                { name: "muhammad" },
+                { name: "fajar" }
             ]
         }
         this.scrollBot()
         await this.filterUser()
 
-        if (this.state.messages.length === 0){
-            await this.setState({messages: this.allMessages})
+        if (this.state.messages.length === 0) {
+            await this.setState({ messages: this.allMessages })
         }
     }
 
@@ -123,16 +136,16 @@ class MainPage extends React.Component {
         let myMsg = e.target.value
         await this.setState({ myMsg })
     }
-    
+
     handleSearchText = async (e) => {
         e.preventDefault()
         let searchText = e.target.value
-        await this.setState({searchText})
+        await this.setState({ searchText })
         await this.filterUser()
     }
 
     handleSendMessageEnter = async (e) => {
-        if (e.key === "Enter"){
+        if (e.key === "Enter") {
             await this.handleSendMessage(e)
         }
     }
@@ -160,9 +173,11 @@ class MainPage extends React.Component {
                 <UserList users={this.state.users} style={this.userList}></UserList>
                 <MessageBox messageBoxID={this.messageBoxID} userID={this.state.userID} style={this.messageBox} messages={this.state.messages} ></MessageBox>
                 <ChatBox sendButtonID={this.sendButtonID} handleSendMessageEnter={this.handleSendMessageEnter} handleTextArea={this.handleTextArea} handleSendMessage={this.handleSendMessage} style={this.chatBox}></ChatBox>
+                <button onClick={this.handleLogout} style={this.logoutButton}>Logout</button>
+                { localStorage.getItem("isLogin") !== "true" && <Navigate replace to="/"></Navigate>}
             </div>
         );
     }
 }
 
-export default MainPage;
+export default withRouter(MainPage);
