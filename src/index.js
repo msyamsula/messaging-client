@@ -13,6 +13,7 @@ import MainPage from "./pages/MainPage"
 // import LoginForm from "./components/LoginForm"
 import SignUpForm from './components/SignUpForm';
 import Welcome from "./pages/Welcome"
+import ChatTitle from './components/ChatTitle';
 
 ReactDOM.render(
   <React.StrictMode>
@@ -21,6 +22,7 @@ ReactDOM.render(
             <Route path="/" element={<Welcome/>}/>
             <Route path="/signup" element={<SignUpForm/>}/>
             <Route path="/messaging" element={<MainPage/>}/>
+            <Route path="/testing" element={<ChatTitle/>}></Route>
         </Routes>
     </Router>
   </React.StrictMode>,

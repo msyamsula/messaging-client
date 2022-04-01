@@ -1,3 +1,4 @@
+import axios from "axios";
 import React from "react"
 import { Navigate } from "react-router-dom";
 import LoginForm from "../components/LoginForm";
@@ -19,14 +20,17 @@ class Welcome extends React.Component {
             gridArea: "2/2/4/4",
         }
 
+        this.apiURL = process.env.REACT_APP_API_URL;
+        
+
         this.state = {
-            status: true
+            wantLogin: true
         }
     }
 
     handleClickSignUp = async (e) => {
         e.preventDefault()
-        await this.setState({status: !this.state.status})
+        await this.setState({wantLogin: !this.state.wantLogin})
     }
 
 
@@ -35,18 +39,34 @@ class Welcome extends React.Component {
         let username = e.target.Username.value
         let password = e.target.Password.value
         let confirmPassword = e.target.ConfirmPassword.value
-        console.log(username, password, confirmPassword);
         if (password !== confirmPassword){
             alert("password doesn't match")
             return
         }
 
-        await this.setState({status: !this.state.status})
+        let config = {
+            method: "post",
+            url: `${this.apiURL}/register`,
+            data: {
+                "Username": username,
+                "Password": password
+            }
+        }
+
+        try {
+            await axios(config)
+        } catch (error) {
+            alert(error)
+            return
+        }
+
+        alert("Register Success")
+        await this.setState({wantLogin: !this.state.wantLogin})
         console.log(password, confirmPassword, username);
     }
 
     conditionalRender = () => {
-        if (this.state.status === true){
+        if (this.state.wantLogin === true){
             return (
                 <LoginForm form={this.form} handleClickSignUp={this.handleClickSignUp} props={this.props}></LoginForm>
             )

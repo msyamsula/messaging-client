@@ -5,19 +5,20 @@ function UserList(props) {
         borderRadius: "5px",
         marginTop: "10px",
         height: "7%",
-        padding: "5px 10px"
+        padding: "5px 10px",
+        cursor: "pointer"
     }
 
-    let createSingleList = (user, id) => {
+    let createSingleList = (user) => {
         return (
-            <div key={`user${id}`} style={singleList}>{user.name}</div>
+            <div key={`${user.ID}`} className={user.ID} style={singleList} onClick={props.handleFriendClick}>{user.Username}</div>
         )
     }
 
     return (
         <div style={props.style}>
-            { props.users.map((user, index) => {
-                return createSingleList(user, index)
+            { props.users.map((user) => {
+                return createSingleList(user)
             })}
         </div>
     );

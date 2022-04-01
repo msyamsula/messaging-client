@@ -11,11 +11,23 @@ update:
 	make stop
 	make run
 prod-run:
+	docker pull syamsuldocker/messaging-client
 	docker run -itd --name messaging-client --network=host \
 	-v ${CURDIR}/nginx/conf:/etc/nginx/conf.d/:ro \
 	-v ${CURDIR}/certbot/conf:/etc/nginx/ssl:ro \
 	-v ${CURDIR}/certbot/www:/var/www/certbot/:ro \
 	syamsuldocker/messaging-client
+ship:
+	npm run build
+	docker build -t syamsuldocker/messaging-client .
+	scp -i ~/syamsul.pem ./makefile ubuntu@ec2-13-215-105-69.ap-southeast-1.compute.amazonaws.com:~/makefile
+	scp -i ~/syamsul.pem ./nginx/conf/nginx.conf ubuntu@ec2-13-215-105-69.ap-southeast-1.compute.amazonaws.com:~/nginx/conf/nginx.conf
+	docker push syamsuldocker/messaging-client
+ssh:
+	ssh -i ~/syamsul.pem ubuntu@ec2-13-215-105-69.ap-southeast-1.compute.amazonaws.com
+
+
+# https tools
 webserver-start:
 	docker run -itd --name nginx --network=host \
 	 -v ${CURDIR}/nginx/conf/:/etc/nginx/conf.d/:ro \
@@ -43,9 +55,3 @@ certbot-renew:
 	-v ${pwd}/certbot/www:/var/www/certbot/:rw \
 	-v ${pwd}/certbot/conf:/etc/letsencrypt/:rw \
 	certbot/certbot:latest renew
-copy:
-	scp -i ~/syamsul.pem ./makefile ubuntu@ec2-13-215-105-69.ap-southeast-1.compute.amazonaws.com:~/makefile
-	scp -i ~/syamsul.pem ./nginx/conf/nginx.conf ubuntu@ec2-13-215-105-69.ap-southeast-1.compute.amazonaws.com:~/nginx/conf/nginx.conf
-
-
-

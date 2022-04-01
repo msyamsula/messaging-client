@@ -1,19 +1,39 @@
+import axios from "axios"
 import { useNavigate } from "react-router-dom"
 
 function LoginForm(props) {
+    let apiURL = process.env.REACT_APP_API_URL
     let navigate = useNavigate()
-    let handleSubmit = (e)=>{
+
+    let handleLogin = async (e)=>{
         e.preventDefault()
         let form = e.target
         let username = form.Username.value
         let password = form.Password.value
-        console.log(username, password);
         if (username === "" || password === ""){
             alert("username & password must be filled")
             return
         }
 
+        let config = {
+            method: "post",
+            url: `${apiURL}/login`,
+            data: {
+                "Username": username,
+                "Password": password
+            }
+        }
+
+        let response
+        try {
+            response = await axios(config)
+        } catch (error) {
+            alert(error)
+            return
+        }
+
         localStorage.setItem("isLogin", true)
+        localStorage.setItem("userID", response.data.data.ID)
         navigate("/messaging")
     }
 
@@ -25,7 +45,7 @@ function LoginForm(props) {
 
     return (
         <div style={{...props.form, height: "100%"}}>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleLogin}>
                 <label htmlFor="Username">Username</label><br></br>
                 <input style={width100} id="Username" placeholder="Username"></input><br></br>
                 <label htmlFor="Password">Password</label><br></br>

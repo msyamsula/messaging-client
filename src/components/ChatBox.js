@@ -10,7 +10,8 @@ function ChatBox(props) {
     let button = {
         margin: "5px 0px",
         gridColumn: "2/3",
-        width: "95%"
+        width: "95%",
+        cursor: "pointer"
     }
 
     let container = {

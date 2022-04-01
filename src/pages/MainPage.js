@@ -1,5 +1,7 @@
+import axios from "axios";
 import React from "react"
 import { Navigate } from "react-router-dom";
+import ChatTitle from "../components/ChatTitle";
 import { withRouter } from "../withRouter"
 const { default: ChatBox } = require("../components/ChatBox");
 const { default: MessageBox } = require("../components/MessageBox");
@@ -26,9 +28,11 @@ class MainPage extends React.Component {
         }
 
         this.messageBox = {
-            gridArea: "1/2/span 9 /3",
+            gridArea: "2/2/10/3",
             padding: "40px",
-            overflow: "scroll"
+            overflow: "scroll",
+            // alignSelf: "center",
+            // height: "100%"
         }
 
         this.messageBoxID = "messageBox"
@@ -43,15 +47,19 @@ class MainPage extends React.Component {
 
         this.logoutButton = {
             gridArea: "10/1/11/2",
-            margin: "10px"
+            margin: "10px",
+            cursor: "pointer"
         }
 
         this.chatBox = {
             gridArea: "10/2/11/3",
         }
 
+        this.chatTitle = {
+            gridArea : "1/2/2/3"
+        }
 
-        this.allMessages = [
+        this.initMessages = [
             { text: "assalamualaikum", ownerID: 1 },
             { text: "waalaikumsalam", ownerID: 2 },
             { text: "ada apa cuy?", ownerID: 2 },
@@ -62,21 +70,44 @@ class MainPage extends React.Component {
         // this.allMessages = []
 
         // this.users = this.createUser(5)
+        // this.initMessages = []
         this.initUsers = []
+        this.firstLoad = true
+        this.initFriend = {
+            "Username": "Welcome to Syamsul Messaging",
+            "ID": -1
+        }
         this.state = {
-            userID: 1,
+            userID: localStorage.getItem("userID"),
             myMsg: "",
-            messages: this.allMessages,
+            messages: this.initMessages,
             users: this.initUsers,
-            searchText: ""
+            searchText: "",
+            friend: this.initFriend
         }
     }
 
     scrollBot = () => {
         let element = document.getElementById(this.messageBoxID)
-        if (element !== "") {
+        if (element !== null) {
             element.scrollTop = element.scrollHeight
         }
+    }
+
+    handleFriendClick = async (e) => {
+        e.preventDefault()
+        let ID = parseInt(e.target.className)
+        let Username = e.target.innerHTML
+        let friend = {
+            ID,
+            Username
+        }
+
+        await this.setState({friend})
+
+        let textArea = document.getElementById("myMsg")
+        textArea.focus()
+
     }
 
     handleLogout = (e) => {
@@ -88,7 +119,7 @@ class MainPage extends React.Component {
     filterUser = async () => {
         if (this.state.searchText !== "") {
             let filteredUser = this.initUsers.filter((user) => {
-                return user.name.includes(this.state.searchText)
+                return user.Username.toLowerCase().includes(this.state.searchText.toLowerCase())
             })
             await this.setState({ users: filteredUser })
         } else {
@@ -97,20 +128,34 @@ class MainPage extends React.Component {
     }
 
     componentDidMount = async () => {
-        if (this.state.users.length === 0) {
-            this.initUsers = [
-                { name: "syamsul" },
-                { name: "arifin" },
-                { name: "muhammad" },
-                { name: "fajar" }
-            ]
+        let chatbox = document.getElementById("myMsg")
+        chatbox.focus()
+        if (this.firstLoad) {
+
+            let config = {
+                method: "get",
+                url: `${process.env.REACT_APP_API_URL}/user`
+            }
+
+            try {
+                let response = await axios(config)
+                this.initUsers = response.data.data
+            } catch (error) {
+                alert(error)
+                this.initUsers = []
+            }
+
+
+            this.initMessages = []
+            await this.setState({ messages: this.initMessages })
+
+            
+
+            this.firstLoad = false
         }
+
         this.scrollBot()
         await this.filterUser()
-
-        if (this.state.messages.length === 0) {
-            await this.setState({ messages: this.allMessages })
-        }
     }
 
     // createUser = (size) => {
@@ -153,6 +198,12 @@ class MainPage extends React.Component {
     handleSendMessage = async (e) => {
         e.preventDefault()
         let element = document.getElementById("myMsg")
+        if (element.value === "" || this.state.friend.ID === -1){
+            element.value = ""
+            await this.setState({myMsg: ""})
+            element.focus()
+            return
+        }
         let msgObject = {
             text: this.state.myMsg,
             ownerID: this.state.userID
@@ -170,7 +221,8 @@ class MainPage extends React.Component {
         return (
             <div style={this.container}>
                 <SearchBar searchBoxID={this.searchBoxID} handleSearchText={this.handleSearchText} style={this.searchBar}></SearchBar>
-                <UserList users={this.state.users} style={this.userList}></UserList>
+                <UserList handleFriendClick={this.handleFriendClick} users={this.state.users} style={this.userList}></UserList>
+                <ChatTitle friend={this.state.friend} chatTitle={this.chatTitle} />
                 <MessageBox messageBoxID={this.messageBoxID} userID={this.state.userID} style={this.messageBox} messages={this.state.messages} ></MessageBox>
                 <ChatBox sendButtonID={this.sendButtonID} handleSendMessageEnter={this.handleSendMessageEnter} handleTextArea={this.handleTextArea} handleSendMessage={this.handleSendMessage} style={this.chatBox}></ChatBox>
                 <button onClick={this.handleLogout} style={this.logoutButton}>Logout</button>

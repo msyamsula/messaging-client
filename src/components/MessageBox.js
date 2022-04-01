@@ -1,3 +1,4 @@
+
 function MessageBox(props) {
 
     let singleMessage = {
@@ -19,20 +20,25 @@ function MessageBox(props) {
 
     let emptyMessage = {
         textAlign: "center",
-        justifySelf: "center",
-        alignSelf: "center"
+        heigh: "100%"
+        // justifySelf: "center",
+        // alignSelf: "center"
     }
     emptyMessage = {
-        ...props.style,
+        // ...props.style,
         ...emptyMessage,
     }
-    emptyMessage.overflow = null
+    // emptyMessage.overflow = null
+
+    let myStyle = JSON.parse(JSON.stringify(props.style))
 
     let conditionRender = () => {
         if (props.messages.length === 0) {
+            myStyle.overflow = null
+            myStyle.alignSelf = "center"
             return (
                 <div style={emptyMessage}>
-                    Welcome to Syamsul Messaging, Let's Start Chatting
+                    Let's Start Chatting
                 </div>
             )
         }
@@ -45,7 +51,8 @@ function MessageBox(props) {
 
 
     return (
-        <div id={props.messageBoxID} style={props.style}>
+        <div id={props.messageBoxID} style={myStyle}>
+            {/* <div>halo</div> */}
             {conditionRender()}
         </div>
     );
