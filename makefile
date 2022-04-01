@@ -10,6 +10,9 @@ stop:
 update:
 	make stop
 	make run
+prod-restart:
+	make stop
+	make prod-run
 prod-run:
 	docker pull syamsuldocker/messaging-client
 	docker run -itd --name messaging-client --network=host \

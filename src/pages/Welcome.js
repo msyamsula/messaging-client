@@ -62,7 +62,6 @@ class Welcome extends React.Component {
 
         alert("Register Success")
         await this.setState({wantLogin: !this.state.wantLogin})
-        console.log(password, confirmPassword, username);
     }
 
     conditionalRender = () => {
