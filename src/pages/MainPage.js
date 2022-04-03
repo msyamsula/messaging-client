@@ -124,12 +124,22 @@ class MainPage extends React.Component {
         
         let users = this.state.users.map((user)=>{
             if (user.ID === ID){
-                user.unread = undefined
+                user.UnreadMessages = 0
             }
             return user
         })
         let messages = response.data.data
         await this.setState({messages, users})
+
+        let config2 = {
+            method: "post",
+            url: `${process.env.REACT_APP_API_URL}/message/${ID}`,
+            params: {
+                activeID: this.state.userID
+            }
+        }
+
+        await axios(config2)
 
         let textArea = document.getElementById("myMsg")
         textArea.focus()
@@ -140,11 +150,25 @@ class MainPage extends React.Component {
     handleLogout = (e) => {
         e.preventDefault()
         localStorage.clear()
-        window.location.reload()
+        this.props.navigate("/")
+        // window.location.reload()
         // this.state.socket.disconnect()
     }
 
     filterUser = async () => {
+
+        let config = {
+            method: 'get',
+            url: `${process.env.REACT_APP_API_URL}/user`,
+            params: {
+                activeID: this.state.userID
+            }
+        }
+
+        let response = await axios(config)
+        this.initUsers = response.data.data
+        // await this.setState({users})
+
         if (this.state.searchText !== "") {
             let filteredUser = this.initUsers.filter((user) => {
                 return user.Username.toLowerCase().includes(this.state.searchText.toLowerCase())
@@ -171,10 +195,21 @@ class MainPage extends React.Component {
                 let messages = [...this.state.messages, msgObject]
                 await this.setState({ messages })
                 this.scrollBot()
+
+                let config = {
+                    method: "post",
+                    url: `${process.env.REACT_APP_API_URL}/message/${this.state.friend.ID}`,
+                    params: {
+                        activeID: this.state.userID
+                    }
+                }
+
+                await axios(config)
+
             } else {
                 let users = this.state.users.map((user)=>{
                     if (user.ID === parseInt(msg.from)){
-                        user.unread = (user.unread === undefined) ? 1 : user.unread+1;
+                        user.UnreadMessages += 1
                     }
                     return user
                 })
@@ -194,7 +229,10 @@ class MainPage extends React.Component {
 
             let config = {
                 method: "get",
-                url: `${process.env.REACT_APP_API_URL}/user`
+                url: `${process.env.REACT_APP_API_URL}/user`,
+                params: {
+                    activeID : this.state.userID
+                }
             }
 
             try {
@@ -205,8 +243,6 @@ class MainPage extends React.Component {
                 this.initUsers = []
             }
 
-
-            await this.setState({ messages: this.initMessages })
 
             let activeUser = this.initUsers.filter((usr)=>{
                 return usr.ID === this.state.userID

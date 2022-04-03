@@ -13,6 +13,7 @@ function ChatTitle(props) {
         alignSelf: "center"
 
     }
+
     return (
         <div style={container}>
             <div style={text}>{props.friend.Username}</div>
