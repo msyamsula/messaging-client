@@ -10,10 +10,10 @@ function MessageBox(props) {
     }
 
     let createSingleMessage = (msg, index) => {
-        let status = (msg.ownerID === props.userID) ? "right" : "left"
+        let status = (msg.SenderID === props.userID) ? "right" : "left"
         return (
             <div key={`message${index}`} style={{ ...singleMessage, textAlign: status }}>
-                {msg.text}
+                {msg.Text}
             </div>
         )
     }

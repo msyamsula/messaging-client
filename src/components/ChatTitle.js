@@ -7,7 +7,7 @@ function ChatTitle(props) {
         background: "orange"
     }
 
-    container = {...props.chatTitle, ...container}
+    container = { ...props.chatTitle, ...container }
 
     let text = {
         alignSelf: "center"
@@ -16,6 +16,7 @@ function ChatTitle(props) {
     return (
         <div style={container}>
             <div style={text}>{props.friend.Username}</div>
+            <div style={text}>{props.activeUser.Username}</div>
         </div>
     )
 }

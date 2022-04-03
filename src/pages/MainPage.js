@@ -3,10 +3,16 @@ import React from "react"
 import { Navigate } from "react-router-dom";
 import ChatTitle from "../components/ChatTitle";
 import { withRouter } from "../withRouter"
+import socket from "../websocket/service"
+// import NewService from "../nsq/service";
+// import {Reader} from "nsqjs"
+// import {Axios} from "axios"
+// import { fetchEventSource } from '@microsoft/fetch-event-source';
 const { default: ChatBox } = require("../components/ChatBox");
 const { default: MessageBox } = require("../components/MessageBox");
 const { default: SearchBar } = require("../components/SearchBar");
 const { default: UserList } = require("../components/UserList");
+// const nsq = require("nsqjs")
 
 class MainPage extends React.Component {
     constructor(props) {
@@ -31,8 +37,6 @@ class MainPage extends React.Component {
             gridArea: "2/2/10/3",
             padding: "40px",
             overflow: "scroll",
-            // alignSelf: "center",
-            // height: "100%"
         }
 
         this.messageBoxID = "messageBox"
@@ -56,21 +60,10 @@ class MainPage extends React.Component {
         }
 
         this.chatTitle = {
-            gridArea : "1/2/2/3"
+            gridArea: "1/2/2/3"
         }
 
-        this.initMessages = [
-            { text: "assalamualaikum", ownerID: 1 },
-            { text: "waalaikumsalam", ownerID: 2 },
-            { text: "ada apa cuy?", ownerID: 2 },
-            { text: "enggak nyapa doang, nge test app", ownerID: 3 },
-        ]
-        // this.dummyMessage = this.createMessage(10)
-        // this.allMessages = [...this.allMessages, ...this.dummyMessage]
-        // this.allMessages = []
-
-        // this.users = this.createUser(5)
-        // this.initMessages = []
+        this.initMessages = []
         this.initUsers = []
         this.firstLoad = true
         this.initFriend = {
@@ -78,12 +71,17 @@ class MainPage extends React.Component {
             "ID": -1
         }
         this.state = {
-            userID: localStorage.getItem("userID"),
+            userID: parseInt(localStorage.getItem("userID")),
+            activeUser: {
+                Username: "User",
+                ID: 0
+            },
             myMsg: "",
             messages: this.initMessages,
             users: this.initUsers,
             searchText: "",
-            friend: this.initFriend
+            friend: this.initFriend,
+            socket: null
         }
     }
 
@@ -96,17 +94,46 @@ class MainPage extends React.Component {
 
     handleFriendClick = async (e) => {
         e.preventDefault()
-        let ID = parseInt(e.target.className)
-        let Username = e.target.innerHTML
+        // console.log(e.target.tagName, e.target.className === "");
+        let ID, Username, element
+
+        if (e.target.className !== ""){
+            element = e.target
+        } else {
+            element = e.target.parentNode
+        }
+
+        ID = parseInt(element.className)
+        Username = element.childNodes[0].innerHTML
+        // console.log(ID, Username);
+        // console.log(e.target.childNodes);
         let friend = {
             ID,
             Username
         }
 
-        await this.setState({friend})
+        await this.setState({ friend })
+
+        let config = {
+            method: "get",
+            url: `${process.env.REACT_APP_API_URL}/message/${this.state.userID}/${ID}`
+        }
+
+        
+        let response = await axios(config)
+        
+        let users = this.state.users.map((user)=>{
+            if (user.ID === ID){
+                user.unread = undefined
+            }
+            return user
+        })
+        let messages = response.data.data
+        await this.setState({messages, users})
 
         let textArea = document.getElementById("myMsg")
         textArea.focus()
+        this.scrollBot()
 
     }
 
@@ -114,6 +141,7 @@ class MainPage extends React.Component {
         e.preventDefault()
         localStorage.clear()
         window.location.reload()
+        // this.state.socket.disconnect()
     }
 
     filterUser = async () => {
@@ -128,8 +156,40 @@ class MainPage extends React.Component {
     }
 
     componentDidMount = async () => {
+        // const socket = io(process.env.REACT_APP_WEBSOCKET, {transports: ["websocket", "polling"]})
+        // await this.setState({socket})
+        let myEvent = this.state.userID.toString()
+        socket.on(myEvent, async (msg) => {
+
+            let msgObject = {
+                Text: msg.text,
+                SenderID: parseInt(msg.from),
+                ReceiverID: parseInt(msg.to)
+            }
+
+            if (this.state.friend.ID === parseInt(msg.from)){
+                let messages = [...this.state.messages, msgObject]
+                await this.setState({ messages })
+                this.scrollBot()
+            } else {
+                let users = this.state.users.map((user)=>{
+                    if (user.ID === parseInt(msg.from)){
+                        user.unread = (user.unread === undefined) ? 1 : user.unread+1;
+                    }
+                    return user
+                })
+
+                await this.setState({users})
+            }
+
+
+
+
+        })
+
         let chatbox = document.getElementById("myMsg")
         chatbox.focus()
+
         if (this.firstLoad) {
 
             let config = {
@@ -146,10 +206,15 @@ class MainPage extends React.Component {
             }
 
 
-            this.initMessages = []
             await this.setState({ messages: this.initMessages })
 
-            
+            let activeUser = this.initUsers.filter((usr)=>{
+                return usr.ID === this.state.userID
+            })
+
+            activeUser = activeUser[0]
+
+            this.setState({activeUser})
 
             this.firstLoad = false
         }
@@ -157,24 +222,6 @@ class MainPage extends React.Component {
         this.scrollBot()
         await this.filterUser()
     }
-
-    // createUser = (size) => {
-    //     let users = []
-    //     for (let i = 0; i < size; i++) {
-    //         users.push({ name: "dummy" })
-    //     }
-    //     return users
-    // }
-
-    // createMessage = (size) => {
-    //     let msgs = []
-    //     for (let i = 0; i < size; i++) {
-    //         msgs.push({ text: "dummy", owner: "2" })
-    //     }
-
-    //     return msgs
-    // }
-
 
     handleTextArea = async (e) => {
         e.preventDefault()
@@ -198,19 +245,40 @@ class MainPage extends React.Component {
     handleSendMessage = async (e) => {
         e.preventDefault()
         let element = document.getElementById("myMsg")
-        if (element.value === "" || this.state.friend.ID === -1){
+        if (element.value === "" || this.state.friend.ID === -1) {
             element.value = ""
-            await this.setState({myMsg: ""})
+            await this.setState({ myMsg: "" })
             element.focus()
             return
         }
-        let msgObject = {
+
+        let websocketMsg = {
             text: this.state.myMsg,
-            ownerID: this.state.userID
+            to: this.state.friend.ID.toString(),
+            from: this.state.userID.toString()
         }
 
-        let newMessages = [...this.state.messages, msgObject]
-        await this.setState({ messages: newMessages, myMsg: "" })
+        let msgObject = {
+            Text: this.state.myMsg,
+            SenderID: this.state.userID,
+            ReceiverID: this.state.friend.ID
+        }
+
+        let config = {
+            method: "post",
+            url: `${process.env.REACT_APP_API_URL}/message`,
+            data: msgObject
+        }
+
+        await axios(config)
+
+        let messages = [...this.state.messages, msgObject]
+        await this.setState({ messages, myMsg: "" })
+
+        // console.log(socket);
+        socket.emit("incomingMessage", websocketMsg)
+
+
         element.value = ""
         this.scrollBot()
         element.focus()
@@ -221,8 +289,8 @@ class MainPage extends React.Component {
         return (
             <div style={this.container}>
                 <SearchBar searchBoxID={this.searchBoxID} handleSearchText={this.handleSearchText} style={this.searchBar}></SearchBar>
-                <UserList handleFriendClick={this.handleFriendClick} users={this.state.users} style={this.userList}></UserList>
-                <ChatTitle friend={this.state.friend} chatTitle={this.chatTitle} />
+                <UserList handleFriendClick={this.handleFriendClick} friend={this.state.friend} users={this.state.users} userID={this.state.userID} style={this.userList}></UserList>
+                <ChatTitle friend={this.state.friend} activeUser={this.state.activeUser} chatTitle={this.chatTitle} />
                 <MessageBox messageBoxID={this.messageBoxID} userID={this.state.userID} style={this.messageBox} messages={this.state.messages} ></MessageBox>
                 <ChatBox sendButtonID={this.sendButtonID} handleSendMessageEnter={this.handleSendMessageEnter} handleTextArea={this.handleTextArea} handleSendMessage={this.handleSendMessage} style={this.chatBox}></ChatBox>
                 <button onClick={this.handleLogout} style={this.logoutButton}>Logout</button>

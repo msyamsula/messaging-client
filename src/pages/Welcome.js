@@ -3,6 +3,7 @@ import React from "react"
 import { Navigate } from "react-router-dom";
 import LoginForm from "../components/LoginForm";
 import SignUpForm from "../components/SignUpForm";
+// import socket from "../websocket/service";
 
 class Welcome extends React.Component {
     constructor(props) {
@@ -26,6 +27,10 @@ class Welcome extends React.Component {
         this.state = {
             wantLogin: true
         }
+    }
+
+    componentDidMount = () => {
+        // socket.disconnect()
     }
 
     handleClickSignUp = async (e) => {
