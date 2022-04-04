@@ -1,8 +1,12 @@
 import axios from "axios"
 import { useNavigate } from "react-router-dom"
+import socket from "../websocket/service"
+const io = require("socket.io-client")
 
 function LoginForm(props) {
     let apiURL = process.env.REACT_APP_API_URL
+    let wsURL = `${process.env.REACT_APP_WEBSOCKET}/login`
+    let socket = io.connect(wsURL, { transports: ["websocket", "polling"] })
     let navigate = useNavigate()
 
     let handleLogin = async (e)=>{
@@ -18,12 +22,13 @@ function LoginForm(props) {
         let config = {
             method: "post",
             url: `${apiURL}/login`,
-            data: {
-                "Username": username,
-                "Password": password
+            params: {
+                "username": username,
+                "password": password
             }
         }
 
+        
         let response
         try {
             response = await axios(config)
@@ -31,10 +36,12 @@ function LoginForm(props) {
             alert(error)
             return
         }
-
+        
         localStorage.setItem("isLogin", true)
         localStorage.setItem("userID", response.data.data.ID)
+        socket.emit("userLogin", response.data.data.ID)
         navigate("/messaging")
+        socket.disconnect()
     }
 
     let width100 = {

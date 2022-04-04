@@ -16,12 +16,16 @@ function UserList(props) {
             return (<div key={user.ID}></div>)
         }
 
+        
         let color = (user.ID === props.friend.ID) ? "orange" : "white"
-
+        
         let isActive = {
             background: color
         }
-
+        if (!user.IsActive){
+            isActive.background = "grey"
+        }
+        
         let localStyle = { ...singleList, ...isActive }
 
         return (
@@ -31,6 +35,7 @@ function UserList(props) {
             </div>
         )
     }
+
 
     return (
         <div style={props.style}>
