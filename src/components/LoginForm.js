@@ -41,7 +41,6 @@ function LoginForm(props) {
         localStorage.setItem("userID", response.data.data.ID)
         socket.emit("userLogin", response.data.data.ID)
         navigate("/messaging")
-        socket.disconnect()
     }
 
     let width100 = {

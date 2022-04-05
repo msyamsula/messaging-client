@@ -123,9 +123,10 @@ class MainPage extends React.Component {
             method: "get",
             url: `${process.env.REACT_APP_API_URL}/message/${this.state.userID}/${ID}`
         }
-
-
         let response = await axios(config)
+        let messages = response.data.data
+
+
 
         let users = this.state.users.map((user) => {
             if (user.ID === ID) {
@@ -133,7 +134,6 @@ class MainPage extends React.Component {
             }
             return user
         })
-        let messages = response.data.data
         await this.setState({ messages, users })
 
         let config2 = {
@@ -143,13 +143,17 @@ class MainPage extends React.Component {
                 activeID: this.state.userID
             }
         }
-
         await axios(config2)
-
+        
         let textArea = document.getElementById("myMsg")
         textArea.focus()
         this.scrollBot()
-
+        
+        let websocketRead = {
+            SenderID: this.state.friend.ID,
+            ReceiverID: this.state.userID
+        }
+        this.socket.emit("readMessage", websocketRead)
     }
 
     handleLogout = async (e) => {
@@ -164,8 +168,6 @@ class MainPage extends React.Component {
         await axios(config)
 
         this.socket.emit("userLogout", this.state.userID)
-
-        this.socket.disconnect()
 
         this.props.navigate("/")
         // window.location.reload()
@@ -261,6 +263,11 @@ class MainPage extends React.Component {
 
                 await axios(config)
 
+                this.socket.emit("readMessage", {
+                    ReceiverID: this.state.userID,
+                    SenderID: this.state.friend.ID
+                })
+
             } else {
                 let users = this.state.users.map((user) => {
                     if (user.ID === parseInt(msg.from)) {
@@ -301,6 +308,17 @@ class MainPage extends React.Component {
             })
 
             await this.setState({users})
+        })
+
+        this.socket.on("messageHasBeenRead", async data => {
+            if (data.SenderID === this.state.userID && this.state.friend.ID === data.ReceiverID){
+                let messages = this.state.messages.map(msg => {
+                    msg.IsRead = true
+                    return msg
+                })
+
+                await this.setState({messages})
+            }
         })
     }
 
@@ -357,7 +375,11 @@ class MainPage extends React.Component {
         await this.setState({ messages, myMsg: "" })
 
         // console.log(socket);
-        this.socket.emit("incomingMessage", websocketMsg)
+        this.socket.emit("incomingMessage", websocketMsg, async () => {
+            let messages = this.state.messages
+            messages[messages.length-1].IsRead = false
+            await this.setState({messages})
+        })
 
 
         element.value = ""

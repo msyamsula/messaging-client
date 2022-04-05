@@ -53,8 +53,10 @@ class Welcome extends React.Component {
             method: "post",
             url: `${this.apiURL}/register`,
             data: {
-                "Username": username,
-                "Password": password
+                "Username": username
+            },
+            params: {
+                "password": password
             }
         }
 
