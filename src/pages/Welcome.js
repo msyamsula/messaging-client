@@ -1,9 +1,11 @@
 import axios from "axios";
 import React from "react"
-import { Navigate } from "react-router-dom";
 import LoginForm from "../components/LoginForm";
 import SignUpForm from "../components/SignUpForm";
-// import socket from "../websocket/service";
+const io = require("socket.io-client")
+
+let wsURL = `${process.env.REACT_APP_WEBSOCKET}/signup`
+let socket = io.connect(wsURL, { transports: ["websocket"] })
 
 class Welcome extends React.Component {
     constructor(props) {
@@ -60,8 +62,10 @@ class Welcome extends React.Component {
             }
         }
 
+        let response
         try {
-            await axios(config)
+            response = await axios(config)
+            socket.emit("userSignUp", response.data.data)
         } catch (error) {
             alert(error)
             return

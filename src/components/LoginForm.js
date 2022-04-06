@@ -1,12 +1,11 @@
 import axios from "axios"
 import { useNavigate } from "react-router-dom"
-import socket from "../websocket/service"
 const io = require("socket.io-client")
 
 function LoginForm(props) {
     let apiURL = process.env.REACT_APP_API_URL
     let wsURL = `${process.env.REACT_APP_WEBSOCKET}/login`
-    let socket = io.connect(wsURL, { transports: ["websocket", "polling"] })
+    let socket = io.connect(wsURL, { transports: ["websocket"] })
     let navigate = useNavigate()
 
     let handleLogin = async (e)=>{

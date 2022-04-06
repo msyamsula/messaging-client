@@ -186,14 +186,28 @@ class MainPage extends React.Component {
 
         let response = await axios(config)
         this.initUsers = response.data.data
-        // await this.setState({users})
+        
 
         if (this.state.searchText !== "") {
-            let filteredUser = this.initUsers.filter((user) => {
+            
+
+            let activeUsers = this.initUsers.filter(user=>{
+                return user.IsActive
+            })
+
+            let inActiveUsers = this.initUsers.filter(user=>{
+                return !user.IsActive
+            })
+
+            let users = [...activeUsers, ...inActiveUsers]
+
+            let filteredUser = users.filter((user) => {
                 return user.Username.toLowerCase().includes(this.state.searchText.toLowerCase())
             })
+
             await this.setState({ users: filteredUser })
         } else {
+            
             await this.setState({ users: this.initUsers })
         }
     }
@@ -288,7 +302,6 @@ class MainPage extends React.Component {
             })
 
             let users = [...sender, ...withOutSender]
-            console.log(users);
             await this.setState({users})
 
 
@@ -331,6 +344,11 @@ class MainPage extends React.Component {
 
                 await this.setState({messages})
             }
+        })
+    
+        this.socket.on("userSignUp", async user => {
+            let users = [...this.state.users, user]
+            await this.setState({users})
         })
     }
 
