@@ -279,6 +279,18 @@ class MainPage extends React.Component {
                 await this.setState({ users })
             }
 
+            let sender = this.state.users.filter( usr => {
+                return usr.ID === parseInt(msg.from)
+            })
+
+            let withOutSender = this.state.users.filter(usr=>{
+                return usr.ID !== parseInt(msg.from)
+            })
+
+            let users = [...sender, ...withOutSender]
+            console.log(users);
+            await this.setState({users})
+
 
 
 
