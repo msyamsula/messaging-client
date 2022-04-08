@@ -1,43 +1,74 @@
-run:
-	npm run build
-	docker build -t syamsuldocker/messaging-client .
-	docker run -itd --name messaging-client --network=host \
-	-v ${CURDIR}/nginx/dev/:/etc/nginx/conf.d/:ro \
+# local run
+run-local:
+	npm run run-local
+
+
+# docker local run
+build-docker-local:
+	npm run build-docker-local
+	docker build \
+	-t syamsuldocker/messaging-client \
+	-f ${CURDIR}/env/dev/Dockerfile \
+	.
+
+run-docker-local:
+	make build-docker-local
+	docker run \
+	--rm \
+	-it \
+	--name messaging-client \
+	--network=host \
 	syamsuldocker/messaging-client
-stop:
+
+stop-docker-local:
 	docker stop messaging-client
 	docker rm messaging-client
-update:
-	make stop
-	make run
-prod-restart:
-	make stop
-	make prod-run
-prod-run:
-	docker pull syamsuldocker/messaging-client
-	docker run -itd --name messaging-client --network=host \
-	-v ${CURDIR}/nginx/conf:/etc/nginx/conf.d/:ro \
-	-v ${CURDIR}/certbot/conf:/etc/nginx/ssl:ro \
-	-v ${CURDIR}/certbot/www:/var/www/certbot/:ro \
-	syamsuldocker/messaging-client
-ship:
-	npm run build
-	docker build -t syamsuldocker/messaging-client .
-	scp -i ~/syamsul.pem ./makefile ubuntu@ec2-13-215-105-69.ap-southeast-1.compute.amazonaws.com:~/makefile
-	scp -i ~/syamsul.pem ./nginx/conf/nginx.conf ubuntu@ec2-13-215-105-69.ap-southeast-1.compute.amazonaws.com:~/nginx/conf/nginx.conf
+
+
+# ship
+ship-production:
+	npm run build-production
+	docker build \
+	-t syamsuldocker/messaging-client \
+	-f ${CURDIR}/env/prod/Dockerfile \
+	.
 	docker push syamsuldocker/messaging-client
+	scp -i ~/syamsul.pem ./makefile ubuntu@ec2-13-215-105-69.ap-southeast-1.compute.amazonaws.com:~/makefile
+	scp -i ~/syamsul.pem env/prod/default.conf ubuntu@ec2-13-215-105-69.ap-southeast-1.compute.amazonaws.com:~/nginx/
+
+# production
+run-production:
+	docker pull syamsuldocker/messaging-client
+	docker run \
+	-itd \
+	--name messaging-client \
+	--network=host \
+	-v ${CURDIR}/nginx/:/etc/nginx/conf.d/ \
+	-v ${CURDIR}/certbot/www/:/var/www/certbot/ \
+	-v ${CURDIR}/certbot/conf/:/etc/nginx/ssl/ \
+	syamsuldocker/messaging-client
+
+stop-production:
+	docker stop messaging-client
+	docker rm messaging-client
+
+restart-production:
+	make stop-production
+	make run-production
+
+# ssh convenient
 ssh:
 	ssh -i ~/syamsul.pem ubuntu@ec2-13-215-105-69.ap-southeast-1.compute.amazonaws.com
 
 
 # https tools
-webserver-start:
+run-webserver:
 	docker run -itd --name nginx --network=host \
 	 -v ${CURDIR}/nginx/conf/:/etc/nginx/conf.d/:ro \
 	 -v ${CURDIR}/certbot/www:/var/www/certbot/:ro \
 	 -v ${CURDIR}/certbot/conf:/etc/nginx/ssl/:ro \
 	 nginx:latest
-webserver-stop:
+stop-webserver:
 	docker stop nginx
 	docker rm nginx
 certbot-dry-run:
@@ -58,3 +89,23 @@ certbot-renew:
 	-v ${CURDIR}/certbot/www:/var/www/certbot/:rw \
 	-v ${CURDIR}/certbot/conf:/etc/letsencrypt/:rw \
 	certbot/certbot:latest renew
+
+# ========================================
+# kubernetes
+# EXPERIMENT
+kube-build:
+	npm run kube-build
+	docker build -t syamsuldocker/messaging-client-kubernetes:v${version} \
+	-f env/kube/Dockerfile .
+
+kube-ship:
+	make version=${version} kube-build
+	docker push syamsuldocker/messaging-client-kubernetes:v${version}
+
+kube-run-dev:
+	make version=${version} kube-build
+	docker run -it --name messaging-client --network=host syamsuldocker/messaging-client-kubernetes:v${version}
+
+kube-stop:
+	docker stop messaging-client
+	docker rm messaging-client

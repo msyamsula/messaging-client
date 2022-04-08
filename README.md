@@ -4,7 +4,7 @@ pre-requisite
 
 # getting a certificate by certbot
 [this must be done on remote server]
-1. run nginx docker with configuration /nginx/conf/nginx.conf, it will make remote server accept http
+1. run nginx docker with configuration /env/prod/nginx.conf, it will make remote server accept http
     preparation
         - docker image
         - folder nginx/conf -> contain nginx.conf
