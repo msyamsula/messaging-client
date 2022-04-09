@@ -3,26 +3,23 @@ run-local:
 	npm run run-local
 
 
-# docker local run
-build-docker-local:
+# cluster
+build:
 	npm run build-docker-local
 	docker build \
 	-t syamsuldocker/messaging-client \
 	-f ${CURDIR}/env/dev/Dockerfile \
 	.
 
-run-docker-local:
-	make build-docker-local
-	docker run \
-	--rm \
-	-it \
-	--name messaging-client \
-	--network=host \
-	syamsuldocker/messaging-client
+run:
+	make build-local-cluster
+	docker-compose -f ${CURDIR}/env/dev/docker-compose.yaml up -d
 
-stop-docker-local:
-	docker stop messaging-client
-	docker rm messaging-client
+stop:
+	docker-compose -f ${CURDIR}/env/dev/docker-compose.yaml down
+
+ps:
+	docker-compose -f ${CURDIR}/env/dev/docker-compose.yaml ps
 
 
 # ship
@@ -34,26 +31,17 @@ ship-production:
 	.
 	docker push syamsuldocker/messaging-client
 	scp -i ~/syamsul.pem ./makefile ubuntu@ec2-13-215-105-69.ap-southeast-1.compute.amazonaws.com:~/makefile
-	scp -i ~/syamsul.pem env/prod/default.conf ubuntu@ec2-13-215-105-69.ap-southeast-1.compute.amazonaws.com:~/nginx/
+	scp -i ~/syamsul.pem env/prod/docker-compose.yaml ubuntu@ec2-13-215-105-69.ap-southeast-1.compute.amazonaws.com:~/
 
 # production
 run-production:
 	docker pull syamsuldocker/messaging-client
-	docker run \
-	-itd \
-	--name messaging-client \
-	--network=host \
-	-v ${CURDIR}/nginx/:/etc/nginx/conf.d/ \
-	-v ${CURDIR}/certbot/www/:/var/www/certbot/ \
-	-v ${CURDIR}/certbot/conf/:/etc/nginx/ssl/ \
-	syamsuldocker/messaging-client
+	docker-compose up -d
 
 stop-production:
-	docker stop messaging-client
-	docker rm messaging-client
+	docker-compose down
 
 restart-production:
-	make stop-production
 	make run-production
 
 # ssh convenient
@@ -94,18 +82,23 @@ certbot-renew:
 # kubernetes
 # EXPERIMENT
 kube-build:
-	npm run kube-build
-	docker build -t syamsuldocker/messaging-client-kubernetes:v${version} \
-	-f env/kube/Dockerfile .
+	npm run build-kube
+	docker build \
+	-t syamsuldocker/messaging-client-kubernetes:v${version} \
+	-f env/kube/Dockerfile \
+	.
 
 kube-ship:
 	make version=${version} kube-build
 	docker push syamsuldocker/messaging-client-kubernetes:v${version}
 
-kube-run-dev:
-	make version=${version} kube-build
-	docker run -it --name messaging-client --network=host syamsuldocker/messaging-client-kubernetes:v${version}
-
-kube-stop:
-	docker stop messaging-client
-	docker rm messaging-client
+kube-redirect:
+	make stop-production
+	docker run \
+	-itd \
+	--name nginx \
+	--network=host \
+	-v ${CURDIR}/nginx/:/etc/nginx/conf.d/ \
+	-v ${CURDIR}/certbot/www/:/var/www/certbot/ \
+	-v ${CURDIR}/certbot/conf/:/etc/nginx/ssl/ \
+	nginx
