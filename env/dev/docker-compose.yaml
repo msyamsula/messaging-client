@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  nginx-client:
+    image: syamsuldocker/messaging-client
+    ports:
+     - "3000:80"
+    # network_mode: "host"
+    # volumes:
+    #   - /path/to/volume
+    # environment:
+    #   - DUMMY=1
+    # env_file:
+    # - /path/to/file
+  
