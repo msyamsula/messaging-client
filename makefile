@@ -4,11 +4,11 @@ run-local:
 
 
 # cluster
-build:
-	npm run build-docker-local
+build-it:
+	npm run build
 	docker build \
 	-t syamsuldocker/messaging-client \
-	-f ${CURDIR}/env/dev/Dockerfile \
+	-f Dockerfile \
 	.
 
 run:
