@@ -1,16 +1,27 @@
-# local run
+# local
 run-local:
 	npm run run-local
 
-
-# cluster
-build-it:
-	npm run build
+build-local:
+	npm run build-local
 	docker build \
 	-t syamsuldocker/messaging-client \
 	-f Dockerfile \
 	.
 
+# production
+build-prod:
+	npm run build-prod
+	docker build \
+	-t syamsuldocker/messaging-client \
+	-f Dockerfile \
+	.
+
+push:
+	docker push syamsuldocker/messaging-client
+
+
+## obsolete
 run:
 	make build-local-cluster
 	docker-compose -f ${CURDIR}/env/dev/docker-compose.yaml up -d
