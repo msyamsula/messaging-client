@@ -1,7 +1,6 @@
 # local
 run-local:
 	npm run run-local
-
 build-local:
 	npm run build-local
 	docker build \
@@ -16,19 +15,15 @@ build-prod:
 	-t syamsuldocker/messaging-client \
 	-f Dockerfile \
 	.
-
 push:
 	docker push syamsuldocker/messaging-client
-
 
 ## obsolete
 run:
 	make build-local-cluster
 	docker-compose -f ${CURDIR}/env/dev/docker-compose.yaml up -d
-
 stop:
 	docker-compose -f ${CURDIR}/env/dev/docker-compose.yaml down
-
 ps:
 	docker-compose -f ${CURDIR}/env/dev/docker-compose.yaml ps
 
@@ -48,22 +43,19 @@ ship-production:
 run-production:
 	docker pull syamsuldocker/messaging-client
 	docker-compose up -d
-
 stop-production:
 	docker-compose down
-
 restart-production:
 	make run-production
 
 # ssh convenient
 ssh:
 	ssh -i ~/syamsul.pem ubuntu@ec2-13-215-105-69.ap-southeast-1.compute.amazonaws.com
-
-
+	
 # https tools
 run-webserver:
 	docker run -itd --name nginx --network=host \
-	 -v ${CURDIR}/nginx/conf/:/etc/nginx/conf.d/:ro \
+	 -v ${CURDIR}/nginx/conf:/etc/nginx/conf.d/:ro \
 	 -v ${CURDIR}/certbot/www:/var/www/certbot/:ro \
 	 -v ${CURDIR}/certbot/conf:/etc/nginx/ssl/:ro \
 	 nginx:latest
@@ -74,12 +66,12 @@ certbot-dry-run:
 	docker run -it --name certbot --network=host \
 	-v ${CURDIR}/certbot/www:/var/www/certbot/:rw \
 	-v ${CURDIR}/certbot/conf:/etc/letsencrypt/:rw \
-	certbot/certbot:latest certonly --webroot --webroot-path /var/www/certbot/ --dry-run -d msyamsula.com
+	certbot/certbot:latest certonly --webroot --webroot-path /var/www/certbot/ --dry-run -d ${MYDOMAIN}
 certbot-create:
 	docker run -it --name certbot --network=host \
 	-v ${CURDIR}/certbot/www:/var/www/certbot/:rw \
 	-v ${CURDIR}/certbot/conf:/etc/letsencrypt/:rw \
-	certbot/certbot:latest certonly --webroot --webroot-path /var/www/certbot/ -d msyamsula.com
+	certbot/certbot:latest certonly --webroot --webroot-path /var/www/certbot/ -d ${MYDOMAIN}
 certbot-stop:
 	docker stop certbot
 	docker rm certbot
