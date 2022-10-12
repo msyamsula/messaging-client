@@ -1,5 +1,6 @@
 import axios from "axios"
 import { useNavigate } from "react-router-dom"
+import {hashString} from "../utility/hashing"
 // const io = require("socket.io-client")
 
 function LoginForm(props) {
@@ -18,6 +19,7 @@ function LoginForm(props) {
             return
         }
 
+        password = hashString(password)
         let config = {
             method: "get",
             url: `${apiURL}/login`,

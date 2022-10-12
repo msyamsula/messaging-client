@@ -3,6 +3,7 @@ import React from "react"
 import { Navigate} from "react-router-dom";
 import ChatTitle from "../components/ChatTitle";
 import { withRouter } from "../withRouter"
+import {saveMessage} from "../utility/function"
 // import socket from "../websocket/service"
 // import NewService from "../nsq/service";
 // import {Reader} from "nsqjs"
@@ -76,7 +77,7 @@ class MainPage extends React.Component {
         this.state = {
             userID: parseInt(localStorage.getItem("userID")),
             token: localStorage.getItem("token"),
-            activeUser: {
+            currentUser: {
                 username: localStorage.getItem("username"),
                 id: parseInt(localStorage.getItem("userID"))
             },
@@ -86,7 +87,7 @@ class MainPage extends React.Component {
             shownUsers:  [],
             friend: {
                 "username": "Welcome to Syamsul Messaging",
-                "id": -1
+                "id": -1,
             },
             socket: null
         }
@@ -120,6 +121,17 @@ class MainPage extends React.Component {
             await this.setState({users: newUserState, shownUsers: newShownUserState})
         })
 
+        this.mainSocket.on(this.state.userID.toString(), async msgObj => {
+
+            if (msgObj.sender_id == this.state.friend.id) {
+                // if engage with conversation
+                let messages = [...this.state.messages, msgObj]
+                await this.setState({messages})
+            } else {
+                // increment unread message
+            }
+        })
+
 
     }
 
@@ -141,11 +153,20 @@ class MainPage extends React.Component {
             element = e.target.parentNode
         }
         
+        let is_active = element.getAttribute("isactive");
+
+        if (is_active == "1"){
+            is_active = true   
+        } else {
+            is_active = false
+        }
+
         id = parseInt(element.className)
         username = element.childNodes[0].innerHTML
         let friend = {
             id,
-            username
+            username,
+            is_active,
         }
 
         await this.setState({ friend, messages: [] })
@@ -282,7 +303,7 @@ class MainPage extends React.Component {
             }
 
             users = users.filter(usr => {
-                return usr.id !== this.state.activeUser.id
+                return usr.id !== this.state.currentUser.id
             })
             await this.setState({users, shownUsers: users})
 
@@ -429,10 +450,16 @@ class MainPage extends React.Component {
 
         let msgObject = {
             text: this.state.myMsg,
-            senderID: this.state.userID,
-            receiverID: this.state.friend.id
+            sender_id: this.state.userID,
+            receiver_id: this.state.friend.id,
+            is_read: this.state.friend.is_active
         }
 
+        // send to websocket
+        this.mainSocket.emit("incomingMessage", msgObject)
+
+        // save to mongo
+        await saveMessage(msgObject, this.state.token)
         // let config = {
         //     method: "post",
         //     url: `${process.env.REACT_APP_API_URL}/message`,
@@ -462,7 +489,7 @@ class MainPage extends React.Component {
             <div style={this.container}>
                 <SearchBar searchBoxID={this.searchBoxID} handleSearchText={this.handleSearchText} style={this.searchBar}></SearchBar>
                 <UserList handleFriendClick={this.handleFriendClick} friend={this.state.friend} users={this.state.shownUsers} userID={this.state.userID} style={this.userList}></UserList>
-                <ChatTitle friend={this.state.friend} activeUser={this.state.activeUser} chatTitle={this.chatTitle} />
+                <ChatTitle friend={this.state.friend} currentUser={this.state.currentUser} chatTitle={this.chatTitle} />
                 <MessageBox messageBoxID={this.messageBoxID} userID={this.state.userID} style={this.messageBox} messages={this.state.messages} ></MessageBox>
                 <ChatBox sendButtonID={this.sendButtonID} handleSendMessageEnter={this.handleSendMessageEnter} handleTextArea={this.handleTextArea} handleSendMessage={this.handleSendMessage} style={this.chatBox}></ChatBox>
                 <button onClick={this.handleLogout} style={this.logoutButton}>Logout</button>

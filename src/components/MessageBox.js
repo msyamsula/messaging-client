@@ -2,9 +2,10 @@
 function MessageBox(props) {
 
     let createSingleMessage = (msg, index) => {
-        let status = (msg.senderID === props.userID) ? "right" : "left"
-        let checkColor = (msg.IsRead === undefined) ? "white" : (msg.IsRead === false) ? "grey" : "green"
-        let checkType = (msg.IsRead === undefined || msg.IsRead === false) ? "v" : "vv"
+        let status = (msg.sender_id === props.userID) ? "right" : "left"
+        let checkColor = (msg.is_read === undefined) ? "white" : (msg.is_read === false) ? "grey" : "green"
+        let checkType = (msg.is_read === undefined || msg.is_read === false) ? "v" : "vv"
+
         let localContainer = {
             display: "grid",
             gridTemplateRows: "3fr 1fr",
@@ -32,7 +33,7 @@ function MessageBox(props) {
                 <div style={{ ...singleMessage, textAlign: status }}>
                     {msg.text}
                 </div>
-                <div style={readStatus}>{(msg.senderID === props.userID) ? checkType : ""}</div>
+                <div style={readStatus}>{(msg.sender_id === props.userID) ? checkType : ""}</div>
             </div>
         )
     }

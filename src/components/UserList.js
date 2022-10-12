@@ -28,8 +28,10 @@ function UserList(props) {
         
         let localStyle = { ...singleList, ...isActive }
 
+        let ia = (user.is_active) ? "1" : "0"
+
         return (
-            <div key={`${user.id}`} className={user.id} style={localStyle} onClick={props.handleFriendClick}>
+            <div key={`${user.id}`} isactive={ia} className={user.id} style={localStyle} onClick={props.handleFriendClick}>
                 <div onClick={props.handleFriendClick} >{user.username}</div>
                 <p onClick={props.handleFriendClick} style={{textAlign: "right", margin: "0", color: "blue"}}>{(user.UnreadMessages === 0 ? "" : user.UnreadMessages)}</p>
             </div>

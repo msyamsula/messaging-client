@@ -2,10 +2,13 @@ import axios from "axios";
 import React from "react"
 import LoginForm from "../components/LoginForm";
 import SignUpForm from "../components/SignUpForm";
+import {hashString} from "../utility/hashing"
 const io = require("socket.io-client")
+
 
 let wsURL = process.env.REACT_APP_WEBSOCKET
 // let socket = io.connect(wsURL, { transports: ["websocket"] })
+
 
 class Welcome extends React.Component {
     constructor(props) {
@@ -34,6 +37,7 @@ class Welcome extends React.Component {
         }
     }
 
+
     componentDidMount = () => {
         // socket.disconnect()
         localStorage.clear("token")
@@ -55,6 +59,8 @@ class Welcome extends React.Component {
             alert("password doesn't match")
             return
         }
+
+        password = hashString(password)
 
         let config = {
             method: "post",
