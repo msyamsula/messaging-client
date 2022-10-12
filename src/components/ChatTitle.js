@@ -16,8 +16,8 @@ function ChatTitle(props) {
 
     return (
         <div style={container}>
-            <div style={text}>{props.friend.Username}</div>
-            <div style={text}>{props.activeUser.Username}</div>
+            <div style={text}>{props.friend.username}</div>
+            <div style={text}>{props.activeUser.username}</div>
         </div>
     )
 }

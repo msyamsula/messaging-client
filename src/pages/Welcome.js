@@ -2,10 +2,10 @@ import axios from "axios";
 import React from "react"
 import LoginForm from "../components/LoginForm";
 import SignUpForm from "../components/SignUpForm";
-const io = require("socket.io-client")
+// const io = require("socket.io-client")
 
-let wsURL = `${process.env.REACT_APP_WEBSOCKET}/signup`
-let socket = io.connect(wsURL, { transports: ["websocket"] })
+// let wsURL = `${process.env.REACT_APP_WEBSOCKET}/signup`
+// let socket = io.connect(wsURL, { transports: ["websocket"] })
 
 class Welcome extends React.Component {
     constructor(props) {
@@ -33,6 +33,8 @@ class Welcome extends React.Component {
 
     componentDidMount = () => {
         // socket.disconnect()
+        localStorage.clear("token")
+        localStorage.clear("isLogin")
     }
 
     handleClickSignUp = async (e) => {
@@ -55,17 +57,15 @@ class Welcome extends React.Component {
             method: "post",
             url: `${this.apiURL}/register`,
             data: {
-                "Username": username
-            },
-            params: {
+                "username": username,
                 "password": password
-            }
+            },
         }
 
-        let response
+        
         try {
-            response = await axios(config)
-            socket.emit("userSignUp", response.data.data)
+            await axios(config)
+            // socket.emit("userSignUp", response.data.data)
         } catch (error) {
             alert(error)
             return

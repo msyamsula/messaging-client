@@ -1,6 +1,6 @@
 import axios from "axios";
 import React from "react"
-import { Navigate } from "react-router-dom";
+import { Navigate} from "react-router-dom";
 import ChatTitle from "../components/ChatTitle";
 import { withRouter } from "../withRouter"
 // import socket from "../websocket/service"
@@ -13,7 +13,7 @@ const { default: MessageBox } = require("../components/MessageBox");
 const { default: SearchBar } = require("../components/SearchBar");
 const { default: UserList } = require("../components/UserList");
 // const nsq = require("nsqjs")
-const io = require("socket.io-client")
+// const io = require("socket.io-client")
 
 
 class MainPage extends React.Component {
@@ -40,11 +40,7 @@ class MainPage extends React.Component {
             padding: "40px",
             overflow: "scroll",
         }
-
-        this.messageBoxID = "messageBox"
-        this.sendButtonID = "sendButton"
-        this.searchBoxID = "searchBox"
-
+        
         this.userList = {
             gridArea: "2/1/span 8/2",
             overflow: "scroll",
@@ -57,9 +53,6 @@ class MainPage extends React.Component {
             cursor: "pointer"
         }
 
-        this.socket = io.connect(process.env.REACT_APP_WEBSOCKET, { transports: ["websocket", "polling"] })
-
-
         this.chatBox = {
             gridArea: "10/2/11/3",
         }
@@ -68,24 +61,26 @@ class MainPage extends React.Component {
             gridArea: "1/2/2/3"
         }
 
-        this.initMessages = []
-        this.initUsers = []
-        this.firstLoad = true
-        this.initFriend = {
-            "Username": "Welcome to Syamsul Messaging",
-            "ID": -1
-        }
+        // this.socket = io.connect(process.env.REACT_APP_WEBSOCKET, { transports: ["websocket", "polling"] })
+        this.messageBoxID = "messageBox"
+        this.sendButtonID = "sendButton"
+        this.searchBoxID = "searchBox"
+
         this.state = {
             userID: parseInt(localStorage.getItem("userID")),
+            token: localStorage.getItem("token"),
             activeUser: {
-                Username: "User",
-                ID: 0
+                username: localStorage.getItem("username"),
+                id: parseInt(localStorage.getItem("userID"))
             },
             myMsg: "",
-            messages: this.initMessages,
-            users: this.initUsers,
-            searchText: "",
-            friend: this.initFriend,
+            messages: [],
+            users: [],
+            shownUsers:  [],
+            friend: {
+                "username": "Welcome to Syamsul Messaging",
+                "id": -1
+            },
             socket: null
         }
     }
@@ -99,257 +94,257 @@ class MainPage extends React.Component {
 
     handleFriendClick = async (e) => {
         e.preventDefault()
-        // console.log(e.target.tagName, e.target.className === "");
-        let ID, Username, element
+        let id, username, element
 
+        
         if (e.target.className !== "") {
             element = e.target
         } else {
             element = e.target.parentNode
         }
-
-        ID = parseInt(element.className)
-        Username = element.childNodes[0].innerHTML
-        // console.log(ID, Username);
-        // console.log(e.target.childNodes);
+        
+        id = parseInt(element.className)
+        username = element.childNodes[0].innerHTML
         let friend = {
-            ID,
-            Username
+            id,
+            username
         }
 
-        await this.setState({ friend })
+        await this.setState({ friend, messages: [] })
 
-        let config = {
-            method: "get",
-            url: `${process.env.REACT_APP_API_URL}/message/${this.state.userID}/${ID}`
-        }
-        let response = await axios(config)
-        let messages = response.data.data
+        // let config = {
+        //     method: "get",
+        //     url: `${process.env.REACT_APP_API_URL}/message/${this.state.userID}/${ID}`
+        // }
+        // let response = await axios(config)
+        // let messages = response.data.data
 
 
 
-        let users = this.state.users.map((user) => {
-            if (user.ID === ID) {
-                user.UnreadMessages = 0
-            }
-            return user
-        })
-        await this.setState({ messages, users })
+        // let users = this.state.users.map((user) => {
+        //     if (user.ID === ID) {
+        //         user.UnreadMessages = 0
+        //     }
+        //     return user
+        // })
+        // await this.setState({ messages, users })
 
-        let config2 = {
-            method: "post",
-            url: `${process.env.REACT_APP_API_URL}/message/${ID}`,
-            params: {
-                activeID: this.state.userID
-            }
-        }
-        await axios(config2)
+        // let config2 = {
+        //     method: "post",
+        //     url: `${process.env.REACT_APP_API_URL}/message/${ID}`,
+        //     params: {
+        //         activeID: this.state.userID
+        //     }
+        // }
+        // await axios(config2)
         
         let textArea = document.getElementById("myMsg")
         textArea.focus()
         this.scrollBot()
         
-        let websocketRead = {
-            SenderID: this.state.friend.ID,
-            ReceiverID: this.state.userID
-        }
-        this.socket.emit("readMessage", websocketRead)
+        // let websocketRead = {
+        //     SenderID: this.state.friend.ID,
+        //     ReceiverID: this.state.userID
+        // }
+        // this.socket.emit("readMessage", websocketRead)
     }
 
     handleLogout = async (e) => {
         e.preventDefault()
         localStorage.clear()
 
-        let config = {
-            method: "post",
-            url: `${process.env.REACT_APP_API_URL}/logout/${this.state.userID}`
-        }
+        // let config = {
+        //     method: "post",
+        //     url: `${process.env.REACT_APP_API_URL}/logout/${this.state.userID}`
+        // }
 
-        await axios(config)
+        // await axios(config)
 
-        this.socket.emit("userLogout", this.state.userID)
+        // this.socket.emit("userLogout", this.state.userID)
 
-        this.props.navigate("/")
+        this.props.navigate("/dashboard")
         // window.location.reload()
         // this.state.socket.disconnect()
     }
 
-    filterUser = async () => {
+    filterUser = async (searchText) => {
 
-        let config = {
-            method: 'get',
-            url: `${process.env.REACT_APP_API_URL}/user`,
-            params: {
-                activeID: this.state.userID
-            }
-        }
+        // let config = {
+        //     method: 'get',
+        //     url: `${process.env.REACT_APP_API_URL}/user`,
+        //     headers: {
+        //         "x-api-token": localStorage.getItem("token")
+        //     }
+        // }
 
-        let response = await axios(config)
-        this.initUsers = response.data.data
+        // let response = await axios(config)
+        // this.initUsers = response.data.data
         
 
-        if (this.state.searchText !== "") {
+        if (searchText !== "") {
             
 
-            let activeUsers = this.initUsers.filter(user=>{
-                return user.IsActive
+            // let activeUsers = this.initUsers.filter(user=>{
+            //     return user.IsActive
+            // })
+
+            // let inActiveUsers = this.initUsers.filter(user=>{
+            //     return !user.IsActive
+            // })
+
+            // let users = [...activeUsers, ...inActiveUsers]
+
+            let su = this.state.users.filter((user) => {
+                return user.username.toLowerCase().includes(searchText.toLowerCase())
             })
 
-            let inActiveUsers = this.initUsers.filter(user=>{
-                return !user.IsActive
-            })
-
-            let users = [...activeUsers, ...inActiveUsers]
-
-            let filteredUser = users.filter((user) => {
-                return user.Username.toLowerCase().includes(this.state.searchText.toLowerCase())
-            })
-
-            await this.setState({ users: filteredUser })
+            await this.setState({ shownUsers: su })
         } else {
             
-            await this.setState({ users: this.initUsers })
+            await this.setState({ shownUsers: this.state.users })
         }
     }
 
     componentDidMount = async () => {
         // const socket = io(process.env.REACT_APP_WEBSOCKET, {transports: ["websocket", "polling"]})
         // await this.setState({socket})
-        
+
+        if (this.state.token === null) {
+            return
+        }
 
         let chatbox = document.getElementById("myMsg")
         chatbox.focus()
 
-        if (this.firstLoad) {
+        // if (this.firstLoad) {
 
             let config = {
                 method: "get",
-                url: `${process.env.REACT_APP_API_URL}/user`,
-                params: {
-                    activeID: this.state.userID
+                url: `${process.env.REACT_APP_API_URL}/users`,
+                headers: {
+                    "x-api-token": localStorage.getItem("token")
                 }
             }
 
+            let users
             try {
                 let response = await axios(config)
-                this.initUsers = response.data.data
+                users = response.data.data
             } catch (error) {
                 alert(error)
-                this.initUsers = []
+                users = []
             }
 
-
-            let activeUser = this.initUsers.filter((usr) => {
-                return usr.ID === this.state.userID
+            users = users.filter(usr => {
+                return usr.id !== this.state.activeUser.id
             })
-
-            activeUser = activeUser[0]
-
-            this.setState({ activeUser })
-
-            this.firstLoad = false
-        }
-
-        this.scrollBot()
-        await this.filterUser()
-
-        let myEvent = this.state.userID.toString()
-        this.socket.on(myEvent, async (msg) => {
-
-            let msgObject = {
-                Text: msg.text,
-                SenderID: parseInt(msg.from),
-                ReceiverID: parseInt(msg.to)
-            }
-
-            if (this.state.friend.ID === parseInt(msg.from)) {
-                let messages = [...this.state.messages, msgObject]
-                await this.setState({ messages })
-                this.scrollBot()
-
-                let config = {
-                    method: "post",
-                    url: `${process.env.REACT_APP_API_URL}/message/${this.state.friend.ID}`,
-                    params: {
-                        activeID: this.state.userID
-                    }
-                }
-
-                await axios(config)
-
-                this.socket.emit("readMessage", {
-                    ReceiverID: this.state.userID,
-                    SenderID: this.state.friend.ID
-                })
-
-            } else {
-                let users = this.state.users.map((user) => {
-                    if (user.ID === parseInt(msg.from)) {
-                        user.UnreadMessages += 1
-                    }
-                    return user
-                })
-
-                await this.setState({ users })
-            }
-
-            let sender = this.state.users.filter( usr => {
-                return usr.ID === parseInt(msg.from)
-            })
-
-            let withOutSender = this.state.users.filter(usr=>{
-                return usr.ID !== parseInt(msg.from)
-            })
-
-            let users = [...sender, ...withOutSender]
-            await this.setState({users})
+            await this.setState({users, shownUsers: users})
 
 
 
+        //     this.firstLoad = false
+        // }
 
-        })
+        // this.scrollBot()
+        // await this.filterUser()
 
-        this.socket.on("userLogin", async (userID) => {
-            if (userID !== this.state.userID) {
-                let users = this.state.users.map((usr)=>{
-                    if (usr.ID === userID){
-                        usr.IsActive = true
-                    }
+        // let myEvent = this.state.userID.toString()
+        // this.socket.on(myEvent, async (msg) => {
 
-                    return usr
-                })
+        //     let msgObject = {
+        //         Text: msg.text,
+        //         SenderID: parseInt(msg.from),
+        //         ReceiverID: parseInt(msg.to)
+        //     }
 
-                await this.setState({users})
-            }
-        })
+        //     if (this.state.friend.ID === parseInt(msg.from)) {
+        //         let messages = [...this.state.messages, msgObject]
+        //         await this.setState({ messages })
+        //         this.scrollBot()
 
-        this.socket.on("userLogout", async (userID) => {
-            let users = this.state.users.map((usr)=>{
-                if (usr.ID === userID){
-                    usr.IsActive = false
-                }
+        //         let config = {
+        //             method: "post",
+        //             url: `${process.env.REACT_APP_API_URL}/message/${this.state.friend.ID}`,
+        //             params: {
+        //                 activeID: this.state.userID
+        //             }
+        //         }
 
-                return usr
-            })
+        //         await axios(config)
 
-            await this.setState({users})
-        })
+        //         this.socket.emit("readMessage", {
+        //             ReceiverID: this.state.userID,
+        //             SenderID: this.state.friend.ID
+        //         })
 
-        this.socket.on("messageHasBeenRead", async data => {
-            if (data.SenderID === this.state.userID && this.state.friend.ID === data.ReceiverID){
-                let messages = this.state.messages.map(msg => {
-                    msg.IsRead = true
-                    return msg
-                })
+        //     } else {
+        //         let users = this.state.users.map((user) => {
+        //             if (user.ID === parseInt(msg.from)) {
+        //                 user.UnreadMessages += 1
+        //             }
+        //             return user
+        //         })
 
-                await this.setState({messages})
-            }
-        })
+        //         await this.setState({ users })
+        //     }
+
+        //     let sender = this.state.users.filter( usr => {
+        //         return usr.ID === parseInt(msg.from)
+        //     })
+
+        //     let withOutSender = this.state.users.filter(usr=>{
+        //         return usr.ID !== parseInt(msg.from)
+        //     })
+
+        //     let users = [...sender, ...withOutSender]
+        //     await this.setState({users})
+
+
+
+
+        // })
+
+        // this.socket.on("userLogin", async (userID) => {
+        //     if (userID !== this.state.userID) {
+        //         let users = this.state.users.map((usr)=>{
+        //             if (usr.ID === userID){
+        //                 usr.IsActive = true
+        //             }
+
+        //             return usr
+        //         })
+
+        //         await this.setState({users})
+        //     }
+        // })
+
+        // this.socket.on("userLogout", async (userID) => {
+        //     let users = this.state.users.map((usr)=>{
+        //         if (usr.ID === userID){
+        //             usr.IsActive = false
+        //         }
+
+        //         return usr
+        //     })
+
+        //     await this.setState({users})
+        // })
+
+        // this.socket.on("messageHasBeenRead", async data => {
+        //     if (data.SenderID === this.state.userID && this.state.friend.ID === data.ReceiverID){
+        //         let messages = this.state.messages.map(msg => {
+        //             msg.IsRead = true
+        //             return msg
+        //         })
+
+        //         await this.setState({messages})
+        //     }
+        // })
     
-        this.socket.on("userSignUp", async user => {
-            let users = [...this.state.users, user]
-            await this.setState({users})
-        })
+        // this.socket.on("userSignUp", async user => {
+        //     let users = [...this.state.users, user]
+        //     await this.setState({users})
+        // })
     }
 
     handleTextArea = async (e) => {
@@ -361,8 +356,7 @@ class MainPage extends React.Component {
     handleSearchText = async (e) => {
         e.preventDefault()
         let searchText = e.target.value
-        await this.setState({ searchText })
-        await this.filterUser()
+        await this.filterUser(searchText)
     }
 
     handleSendMessageEnter = async (e) => {
@@ -374,42 +368,41 @@ class MainPage extends React.Component {
     handleSendMessage = async (e) => {
         e.preventDefault()
         let element = document.getElementById("myMsg")
-        if (element.value === "" || this.state.friend.ID === -1) {
+        if (element.value === "" || this.state.friend.id === -1) {
             element.value = ""
             await this.setState({ myMsg: "" })
             element.focus()
             return
         }
 
-        let websocketMsg = {
-            text: this.state.myMsg,
-            to: this.state.friend.ID.toString(),
-            from: this.state.userID.toString()
-        }
+        // let websocketMsg = {
+        //     text: this.state.myMsg,
+        //     to: this.state.friend.ID.toString(),
+        //     from: this.state.userID.toString()
+        // }
 
         let msgObject = {
-            Text: this.state.myMsg,
-            SenderID: this.state.userID,
-            ReceiverID: this.state.friend.ID
+            text: this.state.myMsg,
+            senderID: this.state.userID,
+            receiverID: this.state.friend.id
         }
 
-        let config = {
-            method: "post",
-            url: `${process.env.REACT_APP_API_URL}/message`,
-            data: msgObject
-        }
+        // let config = {
+        //     method: "post",
+        //     url: `${process.env.REACT_APP_API_URL}/message`,
+        //     data: msgObject
+        // }
 
-        await axios(config)
+        // await axios(config)
 
         let messages = [...this.state.messages, msgObject]
         await this.setState({ messages, myMsg: "" })
 
-        // console.log(socket);
-        this.socket.emit("incomingMessage", websocketMsg, async () => {
-            let messages = this.state.messages
-            messages[messages.length-1].IsRead = false
-            await this.setState({messages})
-        })
+        // this.socket.emit("incomingMessage", websocketMsg, async () => {
+        //     let messages = this.state.messages
+        //     messages[messages.length-1].IsRead = false
+        //     await this.setState({messages})
+        // })
 
 
         element.value = ""
@@ -422,12 +415,12 @@ class MainPage extends React.Component {
         return (
             <div style={this.container}>
                 <SearchBar searchBoxID={this.searchBoxID} handleSearchText={this.handleSearchText} style={this.searchBar}></SearchBar>
-                <UserList handleFriendClick={this.handleFriendClick} friend={this.state.friend} users={this.state.users} userID={this.state.userID} style={this.userList}></UserList>
+                <UserList handleFriendClick={this.handleFriendClick} friend={this.state.friend} users={this.state.shownUsers} userID={this.state.userID} style={this.userList}></UserList>
                 <ChatTitle friend={this.state.friend} activeUser={this.state.activeUser} chatTitle={this.chatTitle} />
                 <MessageBox messageBoxID={this.messageBoxID} userID={this.state.userID} style={this.messageBox} messages={this.state.messages} ></MessageBox>
                 <ChatBox sendButtonID={this.sendButtonID} handleSendMessageEnter={this.handleSendMessageEnter} handleTextArea={this.handleTextArea} handleSendMessage={this.handleSendMessage} style={this.chatBox}></ChatBox>
                 <button onClick={this.handleLogout} style={this.logoutButton}>Logout</button>
-                { localStorage.getItem("isLogin") !== "true" && <Navigate replace to="/"></Navigate>}
+                { localStorage.getItem("isLogin") !== "true" && <Navigate replace to="/dashboard"></Navigate>}
             </div>
         );
     }

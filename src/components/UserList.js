@@ -12,12 +12,12 @@ function UserList(props) {
     }
 
     let createSingleList = (user) => {
-        if (props.userID === user.ID) {
-            return (<div key={user.ID}></div>)
+        if (props.userID === user.id) {
+            return (<div key={user.id}></div>)
         }
 
         
-        let color = (user.ID === props.friend.ID) ? "orange" : "white"
+        let color = (user.id === props.friend.id) ? "orange" : "white"
         
         let isActive = {
             background: color
@@ -29,8 +29,8 @@ function UserList(props) {
         let localStyle = { ...singleList, ...isActive }
 
         return (
-            <div key={`${user.ID}`} className={user.ID} style={localStyle} onClick={props.handleFriendClick}>
-                <div onClick={props.handleFriendClick} >{user.Username}</div>
+            <div key={`${user.id}`} className={user.id} style={localStyle} onClick={props.handleFriendClick}>
+                <div onClick={props.handleFriendClick} >{user.username}</div>
                 <p onClick={props.handleFriendClick} style={{textAlign: "right", margin: "0", color: "blue"}}>{(user.UnreadMessages === 0 ? "" : user.UnreadMessages)}</p>
             </div>
         )
