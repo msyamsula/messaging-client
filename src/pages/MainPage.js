@@ -13,7 +13,7 @@ const { default: MessageBox } = require("../components/MessageBox");
 const { default: SearchBar } = require("../components/SearchBar");
 const { default: UserList } = require("../components/UserList");
 // const nsq = require("nsqjs")
-// const io = require("socket.io-client")
+const io = require("socket.io-client")
 
 
 class MainPage extends React.Component {
@@ -53,6 +53,13 @@ class MainPage extends React.Component {
             cursor: "pointer"
         }
 
+        this.wsBaseURL = process.env.REACT_APP_WEBSOCKET
+        // this.socket = 
+        // this.loginSocket = io.connect(this.wsBaseURL+"/login", { transports: ["websocket", "polling"] })
+        // this.signupSocket = io.connect(this.wsBaseURL+"/signup", { transports: ["websocket", "polling"] })
+        this.mainSocket = io.connect(this.wsBaseURL, { transports: ["websocket", "polling"] })
+ 
+
         this.chatBox = {
             gridArea: "10/2/11/3",
         }
@@ -83,6 +90,37 @@ class MainPage extends React.Component {
             },
             socket: null
         }
+    }
+
+    refreshUserState = (users, userID, status) => {
+        let ns = users.map(usr => {
+            if (usr.id == userID){
+                usr.is_active = status
+            }
+
+            return usr
+        })
+
+        return ns
+    }
+
+    wsLogic = () => {
+
+        this.mainSocket.on("userLogin", async userID => {
+            let newUserState = this.refreshUserState(this.state.users, userID, true)
+            let newShownUserState = this.refreshUserState(this.state.shownUsers, userID, true)
+
+            await this.setState({users: newUserState, shownUsers: newShownUserState})
+        })
+
+        this.mainSocket.on("userLogout", async userID => {
+            let newUserState = this.refreshUserState(this.state.users, userID, false)
+            let newShownUserState = this.refreshUserState(this.state.shownUsers, userID, false)
+
+            await this.setState({users: newUserState, shownUsers: newShownUserState})
+        })
+
+
     }
 
     scrollBot = () => {
@@ -151,17 +189,23 @@ class MainPage extends React.Component {
 
     handleLogout = async (e) => {
         e.preventDefault()
-        localStorage.clear()
-
-        // let config = {
-        //     method: "post",
-        //     url: `${process.env.REACT_APP_API_URL}/logout/${this.state.userID}`
-        // }
-
-        // await axios(config)
-
+        
+        let config = {
+            method: "post",
+            url: `${process.env.REACT_APP_API_URL}/logout`,
+            headers: {
+                "x-api-token": localStorage.getItem("token")
+            },
+            params: {
+                "username": localStorage.getItem("username")
+            }
+        }
+        
+        await axios(config)
+        
         // this.socket.emit("userLogout", this.state.userID)
-
+        this.mainSocket.emit("userLogout", this.state.userID)
+        localStorage.clear()
         this.props.navigate("/dashboard")
         // window.location.reload()
         // this.state.socket.disconnect()
@@ -212,6 +256,8 @@ class MainPage extends React.Component {
         if (this.state.token === null) {
             return
         }
+        this.wsLogic()
+
 
         let chatbox = document.getElementById("myMsg")
         chatbox.focus()

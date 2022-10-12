@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom"
 function LoginForm(props) {
     let apiURL = process.env.REACT_APP_API_URL
     // let wsURL = `${process.env.REACT_APP_WEBSOCKET}/login`
-    // let socket = io.connect(wsURL, { transports: ["websocket"] })
+    // let loginSocket = io.connect(wsURL+"/login", { transports: ["websocket"] })
     let navigate = useNavigate()
 
     let handleLogin = async (e)=>{
@@ -42,7 +42,7 @@ function LoginForm(props) {
         localStorage.setItem("token", token)
         localStorage.setItem("userID", response.data.data.id)
         localStorage.setItem("username", response.data.data.username)
-        // socket.emit("userLogin", response.data.data.ID)
+        props.loginSocket.emit("userLogin", response.data.data.id)
         navigate("/dashboard/messaging")
     }
 

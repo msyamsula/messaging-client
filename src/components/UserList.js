@@ -22,7 +22,7 @@ function UserList(props) {
         let isActive = {
             background: color
         }
-        if (!user.IsActive){
+        if (!user.is_active){
             isActive.background = "grey"
         }
         

@@ -2,9 +2,9 @@ import axios from "axios";
 import React from "react"
 import LoginForm from "../components/LoginForm";
 import SignUpForm from "../components/SignUpForm";
-// const io = require("socket.io-client")
+const io = require("socket.io-client")
 
-// let wsURL = `${process.env.REACT_APP_WEBSOCKET}/signup`
+let wsURL = process.env.REACT_APP_WEBSOCKET
 // let socket = io.connect(wsURL, { transports: ["websocket"] })
 
 class Welcome extends React.Component {
@@ -22,6 +22,9 @@ class Welcome extends React.Component {
         this.form = {
             gridArea: "2/2/4/4",
         }
+
+        this.loginSocket = io.connect(wsURL+"/login", { transports: ["websocket","polling"] })
+        this.signupSocket = io.connect(wsURL+"/signup", { transports: ["websocket","polling"] })
 
         this.apiURL = process.env.REACT_APP_API_URL;
         
@@ -78,11 +81,11 @@ class Welcome extends React.Component {
     conditionalRender = () => {
         if (this.state.wantLogin === true){
             return (
-                <LoginForm form={this.form} handleClickSignUp={this.handleClickSignUp} props={this.props}></LoginForm>
+                <LoginForm form={this.form} handleClickSignUp={this.handleClickSignUp} props={this.props} loginSocket={this.loginSocket}></LoginForm>
             )
         } else {
             return (
-                <SignUpForm form={this.form} handleSignUp={this.handleSignUp} handleClickBack={this.handleClickSignUp} props={this.props}></SignUpForm>
+                <SignUpForm form={this.form} handleSignUp={this.handleSignUp} handleClickBack={this.handleClickSignUp} props={this.props} signupSocket={this.signupSocket}></SignUpForm>
             )
         }
     }
