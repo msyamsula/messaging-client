@@ -26,3 +26,20 @@ export let saveMessage = async (msgObject, token) => {
     }
 
 }
+
+export let getConversation = async (p1, p2, token) => {
+    let config = {
+        method: "get",
+        url: `${apiURL}/message`,
+        params: {
+            senderID: p1,
+            receiverID: p2
+        },
+        headers: {
+            "x-api-token": token
+        }
+    }
+
+    let messages = await axios(config)
+    return messages.data
+}

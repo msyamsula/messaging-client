@@ -3,7 +3,7 @@ import React from "react"
 import { Navigate} from "react-router-dom";
 import ChatTitle from "../components/ChatTitle";
 import { withRouter } from "../withRouter"
-import {saveMessage} from "../utility/function"
+import {getConversation, saveMessage} from "../utility/function"
 // import socket from "../websocket/service"
 // import NewService from "../nsq/service";
 // import {Reader} from "nsqjs"
@@ -15,6 +15,9 @@ const { default: SearchBar } = require("../components/SearchBar");
 const { default: UserList } = require("../components/UserList");
 // const nsq = require("nsqjs")
 const io = require("socket.io-client")
+
+const wsBaseURL = process.env.REACT_APP_WEBSOCKET
+let mainSocket = io.connect(wsBaseURL, { transports: ["websocket"] })
 
 
 class MainPage extends React.Component {
@@ -54,11 +57,11 @@ class MainPage extends React.Component {
             cursor: "pointer"
         }
 
-        this.wsBaseURL = process.env.REACT_APP_WEBSOCKET
+        // this.wsBaseURL = process.env.REACT_APP_WEBSOCKET
         // this.socket = 
         // this.loginSocket = io.connect(this.wsBaseURL+"/login", { transports: ["websocket", "polling"] })
         // this.signupSocket = io.connect(this.wsBaseURL+"/signup", { transports: ["websocket", "polling"] })
-        this.mainSocket = io.connect(this.wsBaseURL, { transports: ["websocket", "polling"] })
+        // this.mainSocket = io.connect(this.wsBaseURL, { transports: ["websocket"] })
  
 
         this.chatBox = {
@@ -105,31 +108,35 @@ class MainPage extends React.Component {
         return ns
     }
 
-    wsLogic = () => {
+    wsLogic = async () => {
 
-        this.mainSocket.on("userLogin", async userID => {
+        mainSocket.on("userLogin", async userID => {
             let newUserState = this.refreshUserState(this.state.users, userID, true)
             let newShownUserState = this.refreshUserState(this.state.shownUsers, userID, true)
 
             await this.setState({users: newUserState, shownUsers: newShownUserState})
         })
 
-        this.mainSocket.on("userLogout", async userID => {
+        mainSocket.on("userLogout", async userID => {
             let newUserState = this.refreshUserState(this.state.users, userID, false)
             let newShownUserState = this.refreshUserState(this.state.shownUsers, userID, false)
 
             await this.setState({users: newUserState, shownUsers: newShownUserState})
         })
 
-        this.mainSocket.on(this.state.userID.toString(), async msgObj => {
+        mainSocket.on(this.state.userID.toString(), async msgObj => {
 
+            // console.log(msgObj);
             if (msgObj.sender_id == this.state.friend.id) {
                 // if engage with conversation
                 let messages = [...this.state.messages, msgObj]
                 await this.setState({messages})
+                console.log(messages);
+                await this.scrollBot()
             } else {
                 // increment unread message
             }
+            
         })
 
 
@@ -169,7 +176,11 @@ class MainPage extends React.Component {
             is_active,
         }
 
-        await this.setState({ friend, messages: [] })
+        let response = await getConversation(this.state.userID, friend.id, localStorage.getItem("token"))
+        let messages = response.data == null  ? [] : response.data
+
+
+        await this.setState({ friend, messages })
 
         // let config = {
         //     method: "get",
@@ -225,7 +236,7 @@ class MainPage extends React.Component {
         await axios(config)
         
         // this.socket.emit("userLogout", this.state.userID)
-        this.mainSocket.emit("userLogout", this.state.userID)
+        mainSocket.emit("userLogout", this.state.userID)
         localStorage.clear()
         this.props.navigate("/dashboard")
         // window.location.reload()
@@ -273,6 +284,7 @@ class MainPage extends React.Component {
     componentDidMount = async () => {
         // const socket = io(process.env.REACT_APP_WEBSOCKET, {transports: ["websocket", "polling"]})
         // await this.setState({socket})
+        mainSocket = io.connect(wsBaseURL, { transports: ["websocket"] })
 
         if (this.state.token === null) {
             return
@@ -456,31 +468,32 @@ class MainPage extends React.Component {
         }
 
         // send to websocket
-        this.mainSocket.emit("incomingMessage", msgObject)
+        mainSocket.emit("incomingMessage", msgObject)
 
-        // save to mongo
-        await saveMessage(msgObject, this.state.token)
         // let config = {
-        //     method: "post",
+            //     method: "post",
         //     url: `${process.env.REACT_APP_API_URL}/message`,
         //     data: msgObject
         // }
-
+        
         // await axios(config)
-
+        
         let messages = [...this.state.messages, msgObject]
         await this.setState({ messages, myMsg: "" })
-
+        
         // this.socket.emit("incomingMessage", websocketMsg, async () => {
-        //     let messages = this.state.messages
+            //     let messages = this.state.messages
         //     messages[messages.length-1].IsRead = false
         //     await this.setState({messages})
         // })
-
-
+        
+        
         element.value = ""
         this.scrollBot()
-        element.focus()
+        
+        // element.focus()
+        // save to mongo
+        await saveMessage(msgObject, this.state.token)
 
     }
 

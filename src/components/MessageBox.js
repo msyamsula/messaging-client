@@ -69,6 +69,11 @@ function MessageBox(props) {
         return msgs
     }
 
+    
+    // let element = document.getElementById(props.messageBoxID)
+    // if (element !== null) {
+    //     element.scrollTop = element.scrollHeight
+    // }
 
     return (
         <div id={props.messageBoxID} style={myStyle}>
