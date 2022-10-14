@@ -19,7 +19,7 @@ const container = document.getElementById("root")
 const root = createRoot(container)
 
 root.render(
-  <React.StrictMode>
+  // <React.StrictMode>
     <Router>
         <Routes>
             <Route path="/dashboard" element={<Welcome/>}/>
@@ -27,7 +27,7 @@ root.render(
             <Route path="/testing" element={<ChatTitle/>}></Route>
         </Routes>
     </Router>
-  </React.StrictMode>
+  // </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function

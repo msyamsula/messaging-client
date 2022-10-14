@@ -12,12 +12,10 @@ function SearchBar(props) {
 
     container = {...props.style, ...container}
 
-    // input = {...props.style, ...input}
 
     return (
         <div style={container}>
             <input id={props.searchBoxID} onChange={props.handleSearchText} style={input} placeholder="search"></input>
-            {/* <button onClick={props.searchUser} style={button}>search</button> */}
         </div>
     );
 }

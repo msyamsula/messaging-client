@@ -41,14 +41,10 @@ function MessageBox(props) {
     let emptyMessage = {
         textAlign: "center",
         heigh: "100%"
-        // justifySelf: "center",
-        // alignSelf: "center"
     }
     emptyMessage = {
-        // ...props.style,
         ...emptyMessage,
     }
-    // emptyMessage.overflow = null
 
     let myStyle = JSON.parse(JSON.stringify(props.style))
 
@@ -70,14 +66,9 @@ function MessageBox(props) {
     }
 
     
-    // let element = document.getElementById(props.messageBoxID)
-    // if (element !== null) {
-    //     element.scrollTop = element.scrollHeight
-    // }
 
     return (
         <div id={props.messageBoxID} style={myStyle}>
-            {/* <div>halo</div> */}
             {conditionRender()}
         </div>
     );

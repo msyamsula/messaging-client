@@ -11,9 +11,10 @@ function UserList(props) {
         gridTemplateColumns: "5fr 1fr"
     }
 
-    let createSingleList = (user) => {
-        if (props.userID === user.id) {
-            return (<div key={user.id}></div>)
+    let createSingleList = (idx, user) => {
+
+        if (user == null){
+            return (<div key={`unwanted${idx}`}></div>)
         }
 
         
@@ -28,12 +29,11 @@ function UserList(props) {
         
         let localStyle = { ...singleList, ...isActive }
 
-        let ia = (user.is_active) ? "1" : "0"
 
         return (
-            <div key={`${user.id}`} isactive={ia} className={user.id} style={localStyle} onClick={props.handleFriendClick}>
+            <div key={`${user.id}`} className={user.id} style={localStyle} onClick={props.handleFriendClick}>
                 <div onClick={props.handleFriendClick} >{user.username}</div>
-                <p onClick={props.handleFriendClick} style={{textAlign: "right", margin: "0", color: "blue"}}>{(user.UnreadMessages === 0 ? "" : user.UnreadMessages)}</p>
+                <p onClick={props.handleFriendClick} style={{textAlign: "right", margin: "0", color: "blue"}}>{(user.unread === 0 ? "" : user.unread)}</p>
             </div>
         )
     }
@@ -41,8 +41,8 @@ function UserList(props) {
 
     return (
         <div style={props.style}>
-            { props.users.map((user) => {
-                return createSingleList(user)
+            { props.users.map((user, idx) => {
+                return createSingleList(idx, user)
             })}
         </div>
     );

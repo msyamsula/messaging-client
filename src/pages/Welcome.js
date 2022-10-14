@@ -100,7 +100,6 @@ class Welcome extends React.Component {
         return (
             <div style={this.container}>
                 {this.conditionalRender()}
-                {/* {localStorage.getItem("isLogin") === "true" && <Navigate replace to="/messaging"></Navigate>} */}
             </div>
         );
     }
