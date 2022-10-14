@@ -251,7 +251,7 @@ class MainPage extends React.Component {
 
         mainSocket.emit("userLogout", this.state.userID)
         localStorage.clear()
-        this.props.navigate("/dashboard")
+        this.props.navigate("/")
     }
 
     filterUser = async (searchText) => {
@@ -362,7 +362,7 @@ class MainPage extends React.Component {
                 <MessageBox messageBoxID={this.messageBoxID} userID={this.state.userID} style={this.messageBox} messages={this.state.messages} ></MessageBox>
                 <ChatBox sendButtonID={this.sendButtonID} handleSendMessageEnter={this.handleSendMessageEnter} handleTextArea={this.handleTextArea} handleSendMessage={this.handleSendMessage} style={this.chatBox}></ChatBox>
                 <button onClick={this.handleLogout} style={this.logoutButton}>Logout</button>
-                {localStorage.getItem("isLogin") !== "true" && <Navigate replace to="/dashboard"></Navigate>}
+                {localStorage.getItem("isLogin") !== "true" && <Navigate replace to="/"></Navigate>}
             </div>
         );
     }

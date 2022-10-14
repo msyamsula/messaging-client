@@ -42,7 +42,7 @@ function LoginForm(props) {
         localStorage.setItem("userID", response.data.data.id)
         localStorage.setItem("username", response.data.data.username)
         props.loginSocket.emit("userLogin", response.data.data.id)
-        navigate("/dashboard/messaging")
+        navigate("/messaging")
     }
 
     let width100 = {

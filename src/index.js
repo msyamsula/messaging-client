@@ -22,8 +22,8 @@ root.render(
   // <React.StrictMode>
     <Router>
         <Routes>
-            <Route path="/dashboard" element={<Welcome/>}/>
-            <Route path="/dashboard/messaging" element={<MainPage/>}/>
+            <Route path="/" element={<Welcome/>}/>
+            <Route path="/messaging" element={<MainPage/>}/>
             <Route path="/testing" element={<ChatTitle/>}></Route>
         </Routes>
     </Router>
